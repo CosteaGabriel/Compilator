@@ -95,20 +95,53 @@ Token *addTk(int code)
 char *createString(const char *pStartCh, char *pCrtCh)
 {
 	int size = pCrtCh - pStartCh;
-	int idx= 0;
+	int idx= 0, text_idx=0;
 
 	char *text;
 
-	text = (char*)malloc(sizeof(char)*size + 1);
-	text[size]='\0';
+	
+
+	if (lastToken->code == CT_CHAR || lastToken->code == CT_STRING)
+	{
+		text = (char*)malloc(sizeof(char)*size-1);
+		text[size-2] = '\0';
+
+		idx++;
+		pStartCh++;
+		while (idx < size-1)
+		{
+
+			text[text_idx] = *pStartCh;
+			pStartCh++;
+			text_idx++;
+			idx++;
+		}
+
+	}
+	else if (lastToken->code == CT_REAL || lastToken->code == CT_INT)
+	{
+		text = (char*)malloc(sizeof(char)*size + 1);
 
 		while (idx < size)
 		{
+
 			text[idx] = *pStartCh;
 			pStartCh++;
 			idx++;
 		}
+	}
+	else{
+		text = (char*)malloc(sizeof(char)*size + 1);
+		text[size] = '\0';
 
+		while (idx < size)
+		{
+
+			text[idx] = *pStartCh;
+			pStartCh++;
+			idx++;
+		}
+	}
 	return text;
 }
 
@@ -120,6 +153,8 @@ int getNextToken()
 	bool comment = false, hex = false;
 	const char	*pStartCh;
 	Token		*tk;
+
+	int baza = 0, caracter = 0;
 
 	SAFEALLOC(tk, Token);
 
@@ -144,7 +179,7 @@ int getNextToken()
 			}
 			else if (ch == '\'')
 			{
-				pStartCh = pCrtCh;
+				//pStartCh = pCrtCh;
 				pCrtCh++;
 				state = 12;
 			}
@@ -276,11 +311,6 @@ int getNextToken()
 				pCrtCh++;
 				state = 9;
 			}
-			else if (ch == 'e' || ch == 'E')
-			{
-				pCrtCh++;
-				state == 9;
-			}
 			else if (ch == '.')
 			{
 				pCrtCh++;
@@ -297,26 +327,26 @@ int getNextToken()
 				hex = true;
 				state = 4;
 			}
-			else
+			else if (ch == '.')
+			{
+				pCrtCh++;
+				state = 7;
+			}
+			else if(ch >='1' && ch<='9'){
 				state = 3;
+				baza = 8;
+			}
+			else tkerr(addTk(END), "caracter invalid 1");
 			break;
 		case 3:
 			if (ch >= '0' && ch <= '7')
 			{
 				pCrtCh++;
 			}
-			else if (ch == 'e' || ch == 'E')
-			{
-				pCrtCh++;
-				state == 9;
-			}
-			else if (ch > '7')
-			{
-				pCrtCh++;
-				state = 6;
-			}
-			else
+			else{
 				state = 29;
+
+			}
 			break;
 		case 4:
 			if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))
@@ -356,6 +386,11 @@ int getNextToken()
 			{
 				pCrtCh++;
 				state = 8;
+			}
+			else if (ch == 'e' || ch == 'E')
+			{
+				pCrtCh++;
+				state = 9;
 			}
 			else tkerr(addTk(END), "caracter invalid 7\n");
 			break;
@@ -401,6 +436,7 @@ int getNextToken()
 			if (ch != '\'' && ch != '\\')
 			{
 				pCrtCh++;
+				caracter = (int)ch;
 				state = 13;
 			}
 			else if (ch == '\\')
@@ -414,7 +450,7 @@ int getNextToken()
 		case 13:
 			if (ch == '\'')
 			{
-				pCrtCh++;
+				//pCrtCh++;
 				state = 32;
 			}
 			else
@@ -433,6 +469,7 @@ int getNextToken()
 			if (ch == '\'')
 			{
 				pCrtCh++;
+				caracter = (int)ch;
 				state = 32;
 			}
 			else if (ch == '"')
@@ -565,10 +602,16 @@ int getNextToken()
 				tkerr(addTk(END), "caracter invalid 28\n");
 			break;
 		case 29:
+			unsigned long nr;
+
 			tk = addTk(CT_INT);
 			int_char = createString(pStartCh, pCrtCh);
 			if (hex)
 				sscanf(int_char, "%x", &tk->i);
+			else if (baza == 8){
+				nr = strtoul(pStartCh, &pCrtCh, 8);
+				tk->i = nr;
+			}
 			else 
 				sscanf(int_char, "%d", &tk->i);
 			return CT_INT;
@@ -576,12 +619,14 @@ int getNextToken()
 			tk = addTk(CT_REAL);
 			real = createString(pStartCh, pCrtCh);
 			tk->r = atof(real);
-			return CT_INT;
+			return CT_REAL;
 		case 32:
 			tk = addTk(CT_CHAR);
-			tk->text = createString(pStartCh, pCrtCh);
+			tk->i = caracter;
+			pCrtCh++;
 			return CT_CHAR;
 		case 33:
+
 			tk = addTk(CT_STRING);
 			tk->text = createString(pStartCh, pCrtCh);
 			return CT_STRING;
@@ -593,8 +638,23 @@ int getNextToken()
 			addTk(COMMA);
 			return COMMA;
 		case 36:
-				tk = addTk(ID);
-				tk->text = createString(pStartCh, pCrtCh);
+				nCh = pCrtCh - pStartCh;
+				
+				if (nCh == 4 && !memcmp(pStartCh, "void", 4)) tk = addTk(VOID);
+				else  if (nCh == 4 && !memcmp(pStartCh, "char", 4)) tk = addTk(CHAR);
+				else  if (nCh == 3 && !memcmp(pStartCh, "int", 3)) tk = addTk(INT);
+				else  if (nCh == 4 && !memcmp(pStartCh, "else", 4)) tk = addTk(ELSE);
+				else  if (nCh == 6 && !memcmp(pStartCh, "struct", 6)) tk = addTk(STRUCT);
+				else  if (nCh == 5 && !memcmp(pStartCh, "break", 5)) tk = addTk(BREAK);
+				else  if (nCh == 6 && !memcmp(pStartCh, "double", 6)) tk = addTk(DOUBLE);
+				else  if (nCh == 3 && !memcmp(pStartCh, "for", 3)) tk = addTk(FOR);
+				else  if (nCh == 5 && !memcmp(pStartCh, "while", 5)) tk = addTk(WHILE);
+				else  if (nCh == 6 && !memcmp(pStartCh, "return", 6)) tk = addTk(RETURN);
+				else  if (nCh == 2 && !memcmp(pStartCh, "if", 2)) tk = addTk(IF);
+				else  {
+					tk = addTk(ID);
+					tk->text = createString(pStartCh, pCrtCh);
+				}
 			return tk->code;
 		case 37:
 			addTk(SEMICOLON);
@@ -693,8 +753,8 @@ void showAtoms()
 			switch (tk->code)
 		{
 		case ID: printf(":\"%s\"  ", tk->text); break;
-		case CT_STRING: printf(": \"%s\"  ", tk->text);
-		case CT_CHAR: printf(": \"%s\"   ", tk->text); break;
+		case CT_STRING: printf(": \"%s\"  ", tk->text); break;
+		case CT_CHAR: printf(": \"%d\"   ", tk->i); break;
 		case CT_INT: printf(": \"%d\"  ", tk->i); break;
 		case CT_REAL: printf(": \"%f\"  ", tk->r); break;
 		}
