@@ -98,8 +98,8 @@ char *createString(const char *pStartCh, char *pCrtCh)
 	int idx= 0, text_idx=0;
 
 	int convert;
-
-	char *text;
+	const char *buffer;
+	char *text;	
 
 	
 
@@ -112,17 +112,37 @@ char *createString(const char *pStartCh, char *pCrtCh)
 		pStartCh++;
 		while (idx < size-1)
 		{
-			if (*pStartCh == '\t')
+			if (*pStartCh == '\\')
 			{
-				convert = (int)pStartCh;
-				text[text_idx] = convert + '0';
-				pStartCh++;
+				buffer = pStartCh;
+				buffer++;
+				if (*buffer == 't'){
+					text[text_idx] = '\t';
+					text_idx++;
+					pStartCh += 2;
+				}
+				else if (*buffer == 'n'){
+					text[text_idx] = '\n';
+					text_idx++;
+					pStartCh += 2;
+				}
+				else if (*buffer == 'r'){
+					text[text_idx] = '\r';
+					text_idx++;
+					pStartCh += 2;
+				}
+				else {
+					text[text_idx] = *pStartCh;
+					pStartCh++;
+					text_idx++;
+				}
 			}
 			else{
 				text[text_idx] = *pStartCh;
 				pStartCh++;
+				text_idx++;
 			}
-			text_idx++;
+			
 			idx++;
 		}
 
