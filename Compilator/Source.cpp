@@ -97,11 +97,13 @@ char *createString(const char *pStartCh, char *pCrtCh)
 	int size = pCrtCh - pStartCh;
 	int idx= 0, text_idx=0;
 
+	int convert;
+
 	char *text;
 
 	
 
-	if (lastToken->code == CT_CHAR || lastToken->code == CT_STRING)
+	if (lastToken->code == CT_STRING)
 	{
 		text = (char*)malloc(sizeof(char)*size-1);
 		text[size-2] = '\0';
@@ -110,9 +112,16 @@ char *createString(const char *pStartCh, char *pCrtCh)
 		pStartCh++;
 		while (idx < size-1)
 		{
-
-			text[text_idx] = *pStartCh;
-			pStartCh++;
+			if (*pStartCh == '\t')
+			{
+				convert = (int)pStartCh;
+				text[text_idx] = convert + '0';
+				pStartCh++;
+			}
+			else{
+				text[text_idx] = *pStartCh;
+				pStartCh++;
+			}
 			text_idx++;
 			idx++;
 		}
@@ -728,10 +737,6 @@ int getNextToken()
 		case 60:
 			addTk(DIV);
 			return DIV;
-		case 61:
-			tk = addTk(CT_CHAR);
-			tk->text = createString(pStartCh, pCrtCh);
-			return CT_CHAR;
 		}
 	}
 }
