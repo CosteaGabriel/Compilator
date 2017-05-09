@@ -770,7 +770,7 @@ void showAtoms()
 int main()
 {
 	FILE *fis;
-
+	int err;
 	if ((fis = fopen("8.txt", "r")) == NULL){
 		perror("Fisier inexistent");
 		exit(1);
