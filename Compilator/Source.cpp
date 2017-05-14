@@ -94,10 +94,10 @@ Token *addTk(int code)
 
 char *createString(const char *pStartCh, char *pCrtCh)
 {
-	int size = pCrtCh - pStartCh;
+	int size = (pCrtCh - pStartCh);
 	int idx= 0, text_idx=0;
 
-	int convert;
+	int convert, caractere_skkiped = 0;
 	const char *buffer;
 	char *text;	
 
@@ -105,12 +105,9 @@ char *createString(const char *pStartCh, char *pCrtCh)
 
 	if (lastToken->code == CT_STRING)
 	{
-		text = (char*)malloc(sizeof(char)*size-1);
-		text[size-2] = '\0';
-
-		idx++;
+		text = (char*)malloc(sizeof(char)*size);
 		pStartCh++;
-		while (idx < size-1)
+		while (idx < size-2)
 		{
 			if (*pStartCh == '\\')
 			{
@@ -119,33 +116,53 @@ char *createString(const char *pStartCh, char *pCrtCh)
 				if (*buffer == 't'){
 					text[text_idx] = '\t';
 					text_idx++;
+					idx+=2;
+					caractere_skkiped++;
 					pStartCh += 2;
 				}
 				else if (*buffer == 'n'){
 					text[text_idx] = '\n';
 					text_idx++;
+					idx+=2;
+					caractere_skkiped++;
 					pStartCh += 2;
 				}
 				else if (*buffer == 'r'){
 					text[text_idx] = '\r';
 					text_idx++;
+					idx+=2;
+					caractere_skkiped++;
+					pStartCh += 2;
+				}
+				else if (*buffer == '"'){
+					text[text_idx] = '\"';
+					text_idx++;
+					idx+=2;
+					caractere_skkiped++;
+					pStartCh += 2;
+				}
+				else if (*buffer == '\''){
+					text[text_idx] = '\'';
+					text_idx++;
+					idx+=2;
+					caractere_skkiped++;
 					pStartCh += 2;
 				}
 				else {
 					text[text_idx] = *pStartCh;
 					pStartCh++;
+					idx++;
 					text_idx++;
 				}
 			}
 			else{
 				text[text_idx] = *pStartCh;
 				pStartCh++;
+				idx++;
 				text_idx++;
 			}
-			
-			idx++;
 		}
-
+		text[size - caractere_skkiped - 2] = '\0';
 	}
 	else if (lastToken->code == CT_REAL || lastToken->code == CT_INT)
 	{
@@ -163,14 +180,16 @@ char *createString(const char *pStartCh, char *pCrtCh)
 		text = (char*)malloc(sizeof(char)*size + 1);
 		text[size] = '\0';
 
-		while (idx < size)
+		while (idx <=size)
 		{
 
 			text[idx] = *pStartCh;
 			pStartCh++;
 			idx++;
 		}
+		text[size - caractere_skkiped] = '\0';
 	}
+	
 	return text;
 }
 
@@ -212,10 +231,10 @@ int getNextToken()
 				pCrtCh++;
 				state = 12;
 			}
-			else if (ch == '"')
+			else if (ch == '\"')
 			{
-				pStartCh = pCrtCh;
 				pCrtCh++;
+				pStartCh = pCrtCh;
 				state = 16;
 			}
 			else if (ch == '/')
@@ -489,6 +508,17 @@ int getNextToken()
 			if (ch == 'a' || ch == 'b' || ch == 'f' || ch == 'n' || ch == 'r' || ch == 't' || ch == 't' || ch == 'v' || ch == '?' || ch == '\'' || ch == '"' | ch == '\\' || ch == '0')
 			{
 				pCrtCh++;
+				switch (ch)
+				{
+				case 'n':
+					caracter = '\n'; break;
+				case 't':
+					caracter = '\t'; break;
+				case 'r':
+					caracter = '\r'; break;
+				default:
+					break;
+				}
 				state = 15;
 			}
 			else 
@@ -501,7 +531,7 @@ int getNextToken()
 				caracter = (int)ch;
 				state = 32;
 			}
-			else if (ch == '"')
+			else if (ch == '\"')
 			{
 				pCrtCh++;
 				state = 33;
@@ -655,7 +685,6 @@ int getNextToken()
 			pCrtCh++;
 			return CT_CHAR;
 		case 33:
-
 			tk = addTk(CT_STRING);
 			tk->text = createString(pStartCh, pCrtCh);
 			return CT_STRING;
@@ -778,7 +807,7 @@ void showAtoms()
 			switch (tk->code)
 		{
 		case ID: printf(":\"%s\"  ", tk->text); break;
-		case CT_STRING: printf(": \"%s\"  ", tk->text); break;
+		case CT_STRING: printf(": \"%s\" ", tk->text); break;
 		case CT_CHAR: printf(": \"%d\"   ", tk->i); break;
 		case CT_INT: printf(": \"%d\"  ", tk->i); break;
 		case CT_REAL: printf(": \"%f\"  ", tk->r); break;
