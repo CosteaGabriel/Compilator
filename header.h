@@ -29,16 +29,20 @@ typedef struct _Token
 	struct _Token *next;	// inlantuire la urmatorul AL
 }Token;
 
+void err(const char *fmt, ...);
+void tkerr(const Token *tk, const char *fmt, ...);
+void showAtoms();
+int getNextToken();
+
+
+
 extern Token *tokens;
 extern Token *lastToken;
-
+extern Token *crtTk;
 
 extern char input[50001];
 extern int line;
 extern char *pCrtCh;
 
 
-void sintactic();
-void showAtoms();
-int getNextToken();
 #endif 

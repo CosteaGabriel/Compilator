@@ -216,7 +216,7 @@ int getNextToken()
 				state = 37;
 			}
 			else if (ch == ' ' || ch == '\r' || ch == '\t'){
-				pCrtCh++;										// consuma caracterul si ramane in starea 0
+				pCrtCh++;					// consuma caracterul si ramane in starea 0
 			}
 			else if (isalpha(ch) || ch == '_')
 			{

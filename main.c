@@ -17,7 +17,7 @@ char *names[] = { "ID",
 
 Token *tokens = NULL;
 Token *lastToken = NULL;
-
+Token *crtTk = NULL;
 
 char input[50001];
 int line = 1;
@@ -45,7 +45,7 @@ char *pCrtCh;
 
 	showAtoms();
 	printf("urmeaza sintactic\n");
-	sintactic();
+	
 
 	fclose(fis);
 
