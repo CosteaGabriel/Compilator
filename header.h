@@ -33,7 +33,7 @@ void err(const char *fmt, ...);
 void tkerr(const Token *tk, const char *fmt, ...);
 void showAtoms();
 int getNextToken();
-
+int unit();
 
 
 extern Token *tokens;

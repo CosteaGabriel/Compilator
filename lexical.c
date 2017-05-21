@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
+
 
 #include "header.h"
 
@@ -627,13 +629,13 @@ int getNextToken()
 			tk = addTk(CT_INT);
 			int_char = createString(pStartCh, pCrtCh);
 			if (hex)
-				sscanf(int_char, "%x", &tk->i);
+				sscanf(int_char, "%lx", &tk->i);
 			else if (baza == 8){
 				nr = strtoul(pStartCh, &pCrtCh, 8);
 				tk->i = nr;
 			}
 			else 
-				sscanf(int_char, "%d", &tk->i);
+				sscanf(int_char, "%ld", &tk->i);
 			return CT_INT;
 		case 30:
 			tk = addTk(CT_REAL);
@@ -769,8 +771,8 @@ void showAtoms()
 		{
 		case ID: printf(":\"%s\"  ", tk->text); break;
 		case CT_STRING: printf(": \"%s\" ", tk->text); break;
-		case CT_CHAR: printf(": \"%d\"   ", tk->i); break;
-		case CT_INT: printf(": \"%d\"  ", tk->i); break;
+		case CT_CHAR: printf(": \"%ld\"   ", tk->i); break;
+		case CT_INT: printf(": \"%ld\"  ", tk->i); break;
 		case CT_REAL: printf(": \"%f\"  ", tk->r); break;
 		}
 			

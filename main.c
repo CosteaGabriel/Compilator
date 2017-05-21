@@ -45,7 +45,6 @@ char *pCrtCh;
 
 	showAtoms();
 	printf("urmeaza sintactic\n");
-	
 
 	fclose(fis);
 
